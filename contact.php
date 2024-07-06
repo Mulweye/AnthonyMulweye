@@ -1,32 +1,51 @@
 <?php
-$field_name = $_POST['cf_name'];
-$field_email = $_POST['cf_email'];
-$field_message = $_POST['cf_message'];
+$errors = [];
 
-$mail_to = 'mulweye.anthony@gmail.com';
-$subject = 'Message from a site visitor '.$field_name;
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Get POST data
+    $name = isset($_POST['cf_name']) ? strip_tags(trim($_POST['cf_name'])) : '';
+    $email = isset($_POST['cf_email']) ? trim($_POST['cf_email']) : '';
+    $message = isset($_POST['cf_message']) ? strip_tags(trim($_POST['cf_message'])) : '';
 
-$body_message = 'From: '.$field_name."\n";
-$body_message .= 'E-mail: '.$field_email."\n";
-$body_message .= 'Message: '.$field_message;
+    // Validate form fields
+    if (empty($name)) {
+        $errors[] = 'Name is empty';
+    }
 
-$headers = 'From: '.$field_email."\r\n";
-$headers .= 'Reply-To: '.$field_email."\r\n";
+    if (empty($email)) {
+        $errors[] = 'Email is empty';
+    } else if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = 'Email is invalid';
+    }
 
-$mail_status = mail($mail_to, $subject, $body_message, $headers);
+    if (empty($message)) {
+        $errors[] = 'Message is empty';
+    }
 
-if ($mail_status) { ?>
-	<script language="javascript" type="text/javascript">
-		alert('Thank you for the message. We will contact you shortly.');
-		window.location = 'contact_page.html';
-	</script>
-<?php
-}
-else { ?>
-	<script language="javascript" type="text/javascript">
-		alert('Message failed. Please, send an email to gordon@template-help.com');
-		window.location = 'contact_page.html';
-	</script>
-<?php
+    // If no errors, send email
+    if (empty($errors)) {
+        // Recipient email address (replace with your own)
+        $recipient = "mulweye.anthony@gmail.com";
+
+        // Additional headers
+        $headers = "From: $name <$email>";
+
+        // Send email
+        if (mail($recipient, $message, $headers)) {
+            echo "Email sent successfully!";
+        } else {
+            echo "Failed to send email. Please try again later.";
+        }
+    } else {
+        // Display errors
+        echo "The form contains the following errors:<br>";
+        foreach ($errors as $error) {
+            echo "- $error<br>";
+        }
+    }
+} else {
+    // Not a POST request, display a 403 forbidden error
+    header("HTTP/1.1 403 Forbidden");
+    echo "You are not allowed to access this page.";
 }
 ?>
